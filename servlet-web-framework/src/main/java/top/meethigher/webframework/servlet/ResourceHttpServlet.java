@@ -179,6 +179,7 @@ public abstract class ResourceHttpServlet extends HttpServlet {
      * @param fileName 文件名
      * @param uri      访问路径
      * @param response HttpServletResponse
+     * @return true表示返回静态资源
      * @throws IOException IO异常
      */
     protected boolean returnResourceFile(String fileName, String uri, HttpServletResponse response) throws IOException {
