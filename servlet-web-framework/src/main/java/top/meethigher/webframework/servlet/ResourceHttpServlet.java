@@ -153,8 +153,7 @@ public abstract class ResourceHttpServlet extends HttpServlet {
                     args = new HashMap<>();
                     if (req.getContentType() != null && req.getContentType().toLowerCase(Locale.ROOT).contains("application/json")) {
                         String read = convertInputStreamToString(req.getInputStream());
-                        args = JSON.parseObject(read, new TypeReference<>() {
-                        });
+                        args = JSON.parseObject(read);
                     } else {
                         while (names.hasMoreElements()) {
                             String key = names.nextElement();
