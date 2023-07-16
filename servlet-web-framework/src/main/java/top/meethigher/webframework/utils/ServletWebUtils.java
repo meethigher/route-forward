@@ -59,7 +59,7 @@ public class ServletWebUtils {
      * 这边建议使用Map&lt;String,Object&gt;，本身流反序列化后，就是有类型的。
      * 如果传过来的value是Long、Integer、Boolean等类型，强转String会报错
      *
-     * @param url 带参url。如/interface?name=1&age=2
+     * @param url 带参url
      * @return 参数Map
      */
     public static Map<String, Object> getParameters(String url) {
