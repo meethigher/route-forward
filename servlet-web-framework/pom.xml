@@ -6,7 +6,7 @@
 
     <groupId>top.meethigher</groupId>
     <artifactId>servlet-web-framework</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <properties>
         <java.version>8</java.version>
@@ -32,9 +32,9 @@
         </dependency>
         <!--json转换工具-->
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.78</version>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.35</version>
         </dependency>
         <!--日志-logback日志实现-->
         <dependency>

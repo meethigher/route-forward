@@ -10,7 +10,7 @@ import java.util.function.Predicate;
  * 批量创建bean选择器
  *
  * @author chenchuancheng
- * @since 2023/6/7 14:34
+ * @date 2023/08/12 21:34
  */
 public class TestBeanSelector implements ImportSelector {
     @Override

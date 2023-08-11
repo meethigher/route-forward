@@ -4,7 +4,7 @@ package top.meethigher.webframework.utils;
  * 状态码
  *
  * @author chenchuancheng github.com/meethigher
- * @since 2022/12/8 22:07
+ * @date 2022/12/08 22:07
  */
 public enum RespStatus {
     SUCCESS(0,"成功"),

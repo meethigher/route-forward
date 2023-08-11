@@ -4,7 +4,7 @@ package top.meethigher.webframework.utils;
  * web响应
  *
  * @author chenchuancheng github.com/meethigher
- * @since 2022/12/8 22:03
+ * @date 2022/12/08 22:03
  */
 public class Resp<T> {
 

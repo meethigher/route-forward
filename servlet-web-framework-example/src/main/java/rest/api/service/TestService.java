@@ -1,5 +1,6 @@
 package rest.api.service;
 
+import rest.api.exception.DIYException;
 import rest.api.model.Person;
 import top.meethigher.webframework.annotation.Body;
 import top.meethigher.webframework.annotation.Get;
@@ -11,10 +12,8 @@ import top.meethigher.webframework.utils.Resp;
 import java.util.Map;
 
 /**
- *
- *
  * @author chenchuancheng github.com/meethigher
- * @since 2023/7/16 15:49
+ * @date 2023/08/12 22:49
  */
 public class TestService {
 
@@ -38,7 +37,7 @@ public class TestService {
     }
 
     public Resp api5() throws ServletWebException {
-        throw new ServletWebException("模拟出错");
+        throw new DIYException("模拟出错");
     }
 
     public Resp api6() throws ServletWebException {

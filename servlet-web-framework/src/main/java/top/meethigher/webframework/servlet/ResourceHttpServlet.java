@@ -1,12 +1,13 @@
 package top.meethigher.webframework.servlet;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.meethigher.webframework.annotation.Rest;
+import top.meethigher.webframework.exception.BasicServletWebException;
 import top.meethigher.webframework.exception.ServletWebException;
 import top.meethigher.webframework.utils.Resp;
+import top.meethigher.webframework.utils.ServletWebUtils;
 import top.meethigher.webframework.worker.ControllerManager;
 
 import javax.servlet.ServletException;
@@ -34,7 +35,7 @@ import static top.meethigher.webframework.utils.ServletWebUtils.*;
  *
  * @author chenchuancheng github.com/meethigher
  * @see <a href="https://github.com/alibaba/druid/blob/master/core/src/main/java/com/alibaba/druid/support/jakarta/ResourceServlet.java">阿里druid</a>
- * @since 2023/6/11 21:20
+ * @date 2023/06/11 21:20
  */
 public abstract class ResourceHttpServlet extends HttpServlet {
 
@@ -57,7 +58,7 @@ public abstract class ResourceHttpServlet extends HttpServlet {
      */
     protected final ControllerManager controllerManager;
 
-    protected ResourceHttpServlet(String resourcePath, String servletPath, ControllerManager controllerManager) {
+    public ResourceHttpServlet(String resourcePath, String servletPath, ControllerManager controllerManager) {
         this.resourcePath = resourcePath;
         this.servletPath = servletPath;
         this.controllerManager = controllerManager;
@@ -115,16 +116,7 @@ public abstract class ResourceHttpServlet extends HttpServlet {
             return;
         }
         //接口转发
-        try {
-            path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
-            forward(req, resp, method, path);
-        } catch (ServletWebException failure) {//failure表示开发者故意丢出的异常，提示请求失败
-            resp.getWriter().print(toJSONString(Resp.getFailureResp(failure.getMessage())));
-        } catch (Exception error) {//error表示未预见的异常，提示服务器内部错误
-            error.printStackTrace();
-            resp.getWriter().print(toJSONString(Resp.getErrorResp(error.getCause() == null ? error.getMessage() : error.getCause().getMessage())));
-        }
-
+        forward(req, resp, method, path);
     }
 
 
@@ -135,40 +127,48 @@ public abstract class ResourceHttpServlet extends HttpServlet {
      * @param resp   http响应
      * @param method 请求类型 GET/POST
      * @param path   请求
-     * @throws Exception 抛出异常
+     * @throws IOException 抛出异常
      */
-    protected void forward(HttpServletRequest req, HttpServletResponse resp, String method, String path) throws Exception {
-        resp.setContentType("application/json;charset=utf-8");
-        Object result;
-        Map<String, Object> args;
+    protected void forward(HttpServletRequest req, HttpServletResponse resp, String method, String path) throws IOException {
         try {
-            setRequest(req);
-            switch (method) {
-                case "GET":
-                    args = getParameters(URLDecoder.decode(path + "?" + req.getQueryString(), StandardCharsets.UTF_8.name()));
-                    result = controllerManager.call(ControllerManager.HttpMethod.GET, path, args);
-                    break;
-                case "POST":
-                    Enumeration<String> names = req.getParameterNames();
-                    args = new HashMap<>();
-                    if (req.getContentType() != null && req.getContentType().toLowerCase(Locale.ROOT).contains("application/json")) {
-                        String read = convertInputStreamToString(req.getInputStream());
-                        args = JSON.parseObject(read);
-                    } else {
-                        while (names.hasMoreElements()) {
-                            String key = names.nextElement();
-                            args.put(key, req.getParameter(key));
+            path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+            resp.setContentType("application/json;charset=utf-8");
+            Object result;
+            Map<String, Object> args;
+            try {
+                setRequest(req);
+                switch (method) {
+                    case "GET":
+                        args = getParameters(URLDecoder.decode(path + "?" + req.getQueryString(), StandardCharsets.UTF_8.name()));
+                        result = controllerManager.call(ControllerManager.HttpMethod.GET, path, args);
+                        break;
+                    case "POST":
+                        Enumeration<String> names = req.getParameterNames();
+                        args = new HashMap<>();
+                        if (req.getContentType() != null && req.getContentType().toLowerCase(Locale.ROOT).contains("application/json")) {
+                            String read = convertInputStreamToString(req.getInputStream());
+                            args = ServletWebUtils.stringToObject(read);
+                        } else {
+                            while (names.hasMoreElements()) {
+                                String key = names.nextElement();
+                                args.put(key, req.getParameter(key));
+                            }
                         }
-                    }
-                    result = controllerManager.call(ControllerManager.HttpMethod.POST, path, args);
-                    break;
-                default:
-                    throw new ServletWebException("接口目前仅支持Get/Post请求");
+                        result = controllerManager.call(ControllerManager.HttpMethod.POST, path, args);
+                        break;
+                    default:
+                        throw new BasicServletWebException("接口目前仅支持Get/Post请求");
+                }
+                String s = toJSONString(result);
+                resp.getWriter().print(s);
+            } finally {
+                removeRequest();
             }
-            String s = toJSONString(result);
-            resp.getWriter().print(s);
-        } finally {
-            removeRequest();
+        } catch (ServletWebException failure) {//failure表示开发者故意丢出的异常，提示请求失败
+            resp.getWriter().print(toJSONString(Resp.getFailureResp(failure.getMessage())));
+        } catch (Exception error) {//error表示未预见的异常，提示服务器内部错误
+            error.printStackTrace();
+            resp.getWriter().print(toJSONString(Resp.getErrorResp(error.getCause() == null ? error.getMessage() : error.getCause().getMessage())));
         }
     }
 
@@ -196,6 +196,9 @@ public abstract class ResourceHttpServlet extends HttpServlet {
         }
         try {
             URL url = Thread.currentThread().getContextClassLoader().getResource(filePath);
+            if (url == null) {
+                return false;
+            }
             File file = new File(url.toURI());
             if (!file.exists()) {
                 return false;
@@ -227,15 +230,10 @@ public abstract class ResourceHttpServlet extends HttpServlet {
      * @return UTF-8字符串
      */
     protected String readFromResource(String filePath) {
-        if (filePath == null
-                || filePath.isEmpty()
-                || filePath.contains("..")
-                || filePath.contains("?")
-                || filePath.contains(":")) {
+        if (filePath == null || filePath.isEmpty() || filePath.contains("..") || filePath.contains("?") || filePath.contains(":")) {
             return null;
         }
-        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
-             ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath); ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             if (is == null) {
                 return null;
             }
@@ -257,16 +255,11 @@ public abstract class ResourceHttpServlet extends HttpServlet {
      * @return 字节数组
      */
     protected byte[] readByteArrayFromResource(String filePath) {
-        if (filePath == null
-                || filePath.isEmpty()
-                || filePath.contains("..")
-                || filePath.contains("?")
-                || filePath.contains(":")) {
+        if (filePath == null || filePath.isEmpty() || filePath.contains("..") || filePath.contains("?") || filePath.contains(":")) {
             return null;
         }
 
-        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
-             ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath); ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             if (is == null) {
                 return null;
             }

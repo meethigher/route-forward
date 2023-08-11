@@ -6,7 +6,7 @@ import java.lang.annotation.*;
  * 必填注解
  *
  * @author chenchuancheng
- * @since 2023/5/21 10:33
+ * @date 2023/08/12 21:33
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

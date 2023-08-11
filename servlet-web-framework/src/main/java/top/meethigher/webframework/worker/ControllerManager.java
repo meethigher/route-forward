@@ -1,10 +1,11 @@
 package top.meethigher.webframework.worker;
 
-import com.alibaba.fastjson.JSON;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.meethigher.webframework.annotation.*;
-import top.meethigher.webframework.exception.ServletWebException;
+import top.meethigher.webframework.exception.BasicServletWebException;
+import top.meethigher.webframework.utils.ServletWebUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,8 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static top.meethigher.webframework.utils.ServletWebUtils.toObject;
 import static top.meethigher.webframework.utils.ServletRequestUtils.getRequest;
+import static top.meethigher.webframework.utils.ServletWebUtils.toObject;
 
 
 /**
@@ -23,7 +24,7 @@ import static top.meethigher.webframework.utils.ServletRequestUtils.getRequest;
  * 可继承重写
  *
  * @author chenchuancheng github.com/meethigher
- * @since 2023/5/21 03:04
+ * @date 2023/05/21 03:04
  */
 public class ControllerManager {
     private static final Logger log = LoggerFactory.getLogger(ControllerManager.class);
@@ -32,7 +33,7 @@ public class ControllerManager {
      * HTTP请求类型
      *
      * @author chenchuancheng
-     * @since 2023/5/21 03:05
+     * @date 2023/5/21 03:05
      */
     public enum HttpMethod {
         GET,
@@ -59,7 +60,7 @@ public class ControllerManager {
         Class<?> clazz = controller.getClass();
         Rest annotation = clazz.getAnnotation(Rest.class);
         if (annotation == null) {
-            log.warn("未获取到注解 @RestController , 请检查代码!");
+            log.warn("未获取到注解 {} , 请检查代码!", Rest.class);
             return;
         }
         String controllerUrl = annotation.value();
@@ -74,7 +75,7 @@ public class ControllerManager {
                 put(postMethodMap, controller, post.value(), controllerUrl, method);
             }
         }
-        log.debug("注册 {} 到 ControllerManager", controller.getClass());
+        log.debug("注册 {} 到 {}", controller.getClass(), ControllerManager.class);
     }
 
     /**
@@ -99,24 +100,41 @@ public class ControllerManager {
                 if (parameters.length == 1 && parameters[0].getType().equals(Map.class)) {
                     return method.invoke(controller, args);
                 }
+                //参数为注解的处理方式
+                int bodyAnnotationNumber = 0;
                 List<Object> objectList = new ArrayList<>();
                 for (Parameter parameter : parameters) {
                     Param param = parameter.getAnnotation(Param.class);
                     Body body = parameter.getAnnotation(Body.class);
+                    Part part = parameter.getAnnotation(Part.class);
                     if (param != null) {
                         String o = (String) args.get(param.value());
                         //校验必填
                         if (param.required() && o == null) {
-                            throw new ServletWebException("参数 " + param.value() + " 不能为空! ");
+                            throw new BasicServletWebException("参数 " + param.value() + " 不能为空! ");
                         }
                         Object convert = convertType(o, parameter.getType());
                         objectList.add(convert);
                         continue;
                     }
+                    if (part != null) {
+                        if (method.isAnnotationPresent(Get.class)) {
+                            throw new BasicServletWebException("GET 不支持 " + Part.class);
+                        }
+                        // TODO: 2023/8/11 待完成multipart流处理
+
+                    }
                     if (body != null) {
+                        if (method.isAnnotationPresent(Get.class)) {
+                            throw new BasicServletWebException("GET 不支持 " + Body.class);
+                        }
+                        ++bodyAnnotationNumber;
                         Object o = toObject(args, parameter.getType());
                         objectList.add(o);
                     }
+                }
+                if (bodyAnnotationNumber > 1) {
+                    throw new BasicServletWebException(String.format("注解 %s 数量 > 1", Body.class));
                 }
                 int i = parameters.length - objectList.size();
                 if (i > 0) {
@@ -124,7 +142,7 @@ public class ControllerManager {
                         objectList.add("");
                     }
                 } else if (i < 0) {
-                    throw new ServletWebException("参数数量多于预期数量");
+                    throw new BasicServletWebException("参数数量多于预期数量");
                 } else {
 
                 }
@@ -132,9 +150,9 @@ public class ControllerManager {
 
             } catch (InvocationTargetException e) {
                 e.getCause().printStackTrace();
-                throw new ServletWebException(e.getCause().getMessage());
+                throw new BasicServletWebException(e.getCause().getMessage());
             } catch (Exception e) {
-                throw new ServletWebException(e.getMessage());
+                throw new BasicServletWebException(e.getMessage());
             }
         });
     }
@@ -211,12 +229,12 @@ public class ControllerManager {
                     type,
                     getRequest().getHeader("User-Agent"),
                     getRequest().getRemoteAddr(),
-                    JSON.toJSONString(args),
-                    JSON.toJSONString(exec),
+                    ServletWebUtils.toJSONString(args),
+                    ServletWebUtils.toJSONString(exec),
                     System.currentTimeMillis() - startTime);
             return exec;
         } else {
-            throw new ServletWebException("不存在该接口: " + url);
+            throw new BasicServletWebException("不存在该接口: " + url);
         }
     }
 

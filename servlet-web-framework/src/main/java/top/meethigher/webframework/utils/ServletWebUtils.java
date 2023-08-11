@@ -1,8 +1,10 @@
 package top.meethigher.webframework.utils;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import top.meethigher.webframework.annotation.Required;
+import top.meethigher.webframework.exception.BasicServletWebException;
 import top.meethigher.webframework.exception.ServletWebException;
 
 import java.io.BufferedReader;
@@ -17,22 +19,42 @@ import java.util.*;
  * 基于fastjson的工具类
  *
  * @author chenchuancheng
- * @since 2023/5/21 10:25
+ * @date 2023/08/12 23:25
  */
 public class ServletWebUtils {
 
 
     /**
-     * FastJSON使用中两个问题
+     * FastJSON2使用中问题
      * 1. value为null的字段，自动省略
-     * 2. key值默认不带引号
      * 写法过于麻烦，所以提出一个方法
      *
      * @param o 对象
      * @return 将o转换后的json字符串
      */
     public static String toJSONString(Object o) {
-        return JSON.toJSONString(o, SerializerFeature.WRITE_MAP_NULL_FEATURES, SerializerFeature.QuoteFieldNames);
+        return JSON.toJSONString(o, JSONWriter.Feature.WriteMapNullValue);
+    }
+
+    /**
+     * 字符串转对象
+     *
+     * @param o o
+     * @return {@link Map}<{@link String}, {@link Object}>
+     */
+    public static Map<String, Object> stringToObject(String o) {
+        return JSON.parseObject(o);
+    }
+
+    /**
+     * 字符串转对象
+     *
+     * @param o     o
+     * @param clazz clazz
+     * @return {@link T}
+     */
+    public static <T> T stringToObject(String o, Class<T> clazz) {
+        return JSON.parseObject(o, clazz);
     }
 
     /**
@@ -120,7 +142,7 @@ public class ServletWebUtils {
      * @throws ServletWebException 异常
      */
     public static <T> T toObject(Map<String, Object> args, Class<T> clazz) throws ServletWebException {
-        T t = JSON.toJavaObject((JSON) JSON.toJSON(args), clazz);
+        T t = JSON.parseObject(JSON.toJSONString(args), clazz);
         checkRequired(t);
         return t;
     }
@@ -148,10 +170,10 @@ public class ServletWebUtils {
             field.setAccessible(true);
             try {
                 if (field.get(t) == null) {
-                    throw new ServletWebException("参数 " + field.getName() + " 不能为空! ");
+                    throw new BasicServletWebException("参数 " + field.getName() + " 不能为空! ");
                 }
             } catch (Exception e) {
-                throw new ServletWebException(e.getMessage());
+                throw new BasicServletWebException(e.getMessage());
             }
         }
     }

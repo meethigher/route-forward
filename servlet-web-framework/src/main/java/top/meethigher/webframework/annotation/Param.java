@@ -3,10 +3,10 @@ package top.meethigher.webframework.annotation;
 import java.lang.annotation.*;
 
 /**
- * 用于接收GET请求拼参形式请求参数
+ * 用于接收GET/POST请求拼参形式请求参数
  *
  * @author chenchuancheng github.com/meethigher
- * @since 2023/6/8 23:21
+ * @date 2023/06/08 23:21
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
