@@ -6,7 +6,7 @@ import java.lang.annotation.*;
  * 用于接收GET/POST请求拼参形式请求参数
  *
  * @author chenchuancheng github.com/meethigher
- * @date 2023/06/08 23:21
+ * @since 2023/06/08 23:21
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

@@ -35,7 +35,7 @@ import static top.meethigher.webframework.utils.ServletWebUtils.*;
  *
  * @author chenchuancheng github.com/meethigher
  * @see <a href="https://github.com/alibaba/druid/blob/master/core/src/main/java/com/alibaba/druid/support/jakarta/ResourceServlet.java">阿里druid</a>
- * @date 2023/06/11 21:20
+ * @since 2023/06/11 21:20
  */
 public abstract class ResourceHttpServlet extends HttpServlet {
 

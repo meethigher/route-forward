@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * @author chenchuancheng github.com/meethigher
- * @date 2023/08/12 19:08
+ * @since 2023/08/12 19:08
  */
 @SpringBootApplication
 public class Application {

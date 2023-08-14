@@ -12,7 +12,7 @@ import java.util.Map;
  * 测试接口
  *
  * @author chenchuancheng github.com/meethigher
- * @date 2023/08/12 23:39
+ * @since 2023/08/12 23:39
  */
 @Rest("/test")
 public class TestController {

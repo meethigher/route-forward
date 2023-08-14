@@ -19,7 +19,7 @@ import java.util.*;
  * 基于fastjson的工具类
  *
  * @author chenchuancheng
- * @date 2023/08/12 23:25
+ * @since 2023/08/12 23:25
  */
 public class ServletWebUtils {
 
@@ -37,10 +37,10 @@ public class ServletWebUtils {
     }
 
     /**
-     * 字符串转对象
+     * 字符串转map
      *
      * @param o o
-     * @return {@link Map}<{@link String}, {@link Object}>
+     * @return 字符串转换后的map对象
      */
     public static Map<String, Object> stringToObject(String o) {
         return JSON.parseObject(o);

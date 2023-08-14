@@ -24,7 +24,7 @@ import static top.meethigher.webframework.utils.ServletWebUtils.toObject;
  * 可继承重写
  *
  * @author chenchuancheng github.com/meethigher
- * @date 2023/05/21 03:04
+ * @since 2023/05/21 03:04
  */
 public class ControllerManager {
     private static final Logger log = LoggerFactory.getLogger(ControllerManager.class);
@@ -33,7 +33,7 @@ public class ControllerManager {
      * HTTP请求类型
      *
      * @author chenchuancheng
-     * @date 2023/5/21 03:05
+     * @since 2023/5/21 03:05
      */
     public enum HttpMethod {
         GET,
